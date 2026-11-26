@@ -1,0 +1,354 @@
+
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Task Manager</title>
+
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+    >
+
+    <style>
+        body {
+            background-color: #111827;
+            color: #f9fafb;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background-color: #1f2937;
+        }
+
+        .board-column {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            min-height: 400px;
+            padding: 16px;
+        }
+
+        .task-card {
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 10px;
+            color: #f9fafb;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+
+        .task-card:hover {
+            background-color: #4b5563;
+            border-color: #6b7280;
+            transform: translateY(-2px);
+        }
+
+        .task-description {
+            color: #d1d5db;
+        }
+
+        .btn-custom {
+            background-color: #6366f1;
+            border-color: #6366f1;
+            color: #ffffff;
+        }
+
+        .btn-custom:hover {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+            color: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar navbar-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/tasks">
+            Task Manager
+        </a>
+
+        <span class="text-secondary">
+            Мой рабочий стол
+        </span>
+    </div>
+</nav>
+
+<main class="container">
+
+    <!-- Заголовок -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 fw-bold">Мои задачи</h1>
+            <p class="text-secondary mb-0">
+                Управляй своими делами в одном месте
+            </p>
+        </div>
+
+        <a href="/tasks/new" class="btn btn-custom">
+            + Новая задача
+        </a>
+    </div>
+
+    <!-- Поиск, фильтрация и сортировка -->
+    <form action="/tasks" method="get" class="mb-4">
+
+        <div class="row g-3 align-items-end">
+
+            <!-- Поиск по названию -->
+            <div class="col-12 col-lg-4">
+                <label for="title" class="form-label">
+                    Поиск по названию
+                </label>
+
+                <input
+                        type="text"
+                        class="form-control"
+                        id="title"
+                        name="title"
+                        placeholder="Введите название задачи..."
+                        th:value="${selectedTitle}"
+                >
+            </div>
+
+            <!-- Статус -->
+            <div class="col-12 col-md-6 col-lg-2">
+                <label for="status" class="form-label">
+                    Статус
+                </label>
+
+                <select name="status" id="status" class="form-select">
+
+                    <option value=""
+                            th:selected="${selectedStatus == null}">
+                        Все статусы
+                    </option>
+
+                    <option value="TODO"
+                            th:selected="${selectedStatus != null and selectedStatus.name() == 'TODO'}">
+                        К выполнению
+                    </option>
+
+                    <option value="IN_PROGRESS"
+                            th:selected="${selectedStatus != null and selectedStatus.name() == 'IN_PROGRESS'}">
+                        В процессе
+                    </option>
+
+                    <option value="DONE"
+                            th:selected="${selectedStatus != null and selectedStatus.name() == 'DONE'}">
+                        Выполнено
+                    </option>
+
+                </select>
+            </div>
+
+            <!-- Приоритет -->
+            <div class="col-12 col-md-6 col-lg-2">
+                <label for="priority" class="form-label">
+                    Приоритет
+                </label>
+
+                <select name="priority" id="priority" class="form-select">
+
+                    <option value=""
+                            th:selected="${selectedPriority == null}">
+                        Все приоритеты
+                    </option>
+
+                    <option value="LOW"
+                            th:selected="${selectedPriority != null and selectedPriority.name() == 'LOW'}">
+                        Низкий
+                    </option>
+
+                    <option value="MEDIUM"
+                            th:selected="${selectedPriority != null and selectedPriority.name() == 'MEDIUM'}">
+                        Средний
+                    </option>
+
+                    <option value="HIGH"
+                            th:selected="${selectedPriority != null and selectedPriority.name() == 'HIGH'}">
+                        Высокий
+                    </option>
+
+                </select>
+            </div>
+
+            <!-- Сортировка -->
+            <div class="col-12 col-md-6 col-lg-2">
+                <label for="sort" class="form-label">
+                    Сортировка
+                </label>
+
+                <select name="sort" id="sort" class="form-select">
+
+                    <option value="newest"
+                            th:selected="${selectedSort == 'newest'}">
+                        Сначала новые
+                    </option>
+
+                    <option value="oldest"
+                            th:selected="${selectedSort == 'oldest'}">
+                        Сначала старые
+                    </option>
+
+                    <option value="dueSoon"
+                            th:selected="${selectedSort == 'dueSoon'}">
+                        Ближайший дедлайн
+                    </option>
+
+                    <option value="dueLate"
+                            th:selected="${selectedSort == 'dueLate'}">
+                        Дальний дедлайн
+                    </option>
+
+                </select>
+            </div>
+
+            <!-- Кнопки -->
+            <div class="col-12 col-md-6 col-lg-2">
+
+                <button type="submit" class="btn btn-custom">
+                    Применить
+                </button>
+
+                <a href="/tasks" class="btn btn-outline-secondary">
+                    Сбросить
+                </a>
+
+            </div>
+
+        </div>
+    </form>
+
+    <!-- Kanban-доска -->
+    <div class="row g-3">
+
+        <!-- TODO -->
+        <div class="col-12 col-md-4"
+             th:if="${selectedStatus == null or selectedStatus.name() == 'TODO'}">
+
+            <section class="board-column">
+
+                <h2 class="h5 mb-3">
+                    К выполнению
+                    <span class="badge text-bg-secondary"
+                          th:text="${todoCount}">
+                        0
+                    </span>
+                </h2>
+
+                <a class="task-card d-block p-3 mb-3 text-decoration-none"
+                   th:each="task : ${tasks}"
+                   th:if="${task.status.name() == 'TODO'}"
+                   th:href="@{/tasks/{id}/edit(id=${task.id})}">
+
+                    <h3 class="h6 fw-bold"
+                        th:text="${task.title}">
+                        Название задачи
+                    </h3>
+
+                    <p class="task-description small mb-3"
+                       th:text="${task.description}">
+                        Описание задачи
+                    </p>
+
+                    <span class="badge text-bg-danger"
+                          th:text="${task.priority}">
+                        HIGH
+                    </span>
+
+                </a>
+
+            </section>
+        </div>
+
+        <!-- IN PROGRESS -->
+        <div class="col-12 col-md-4"
+             th:if="${selectedStatus == null or selectedStatus.name() == 'IN_PROGRESS'}">
+
+            <section class="board-column">
+
+                <h2 class="h5 mb-3">
+                    В процессе
+                    <span class="badge text-bg-primary"
+                          th:text="${inProgressCount}">
+                        0
+                    </span>
+                </h2>
+
+                <a class="task-card d-block p-3 mb-3 text-decoration-none"
+                   th:each="task : ${tasks}"
+                   th:if="${task.status.name() == 'IN_PROGRESS'}"
+                   th:href="@{/tasks/{id}/edit(id=${task.id})}">
+
+                    <h3 class="h6 fw-bold"
+                        th:text="${task.title}">
+                        Название задачи
+                    </h3>
+
+                    <p class="task-description small mb-3"
+                       th:text="${task.description}">
+                        Описание задачи
+                    </p>
+
+                    <span class="badge text-bg-danger"
+                          th:text="${task.priority}">
+                        HIGH
+                    </span>
+
+                </a>
+
+            </section>
+        </div>
+
+        <!-- DONE -->
+        <div class="col-12 col-md-4"
+             th:if="${selectedStatus == null or selectedStatus.name() == 'DONE'}">
+
+            <section class="board-column">
+
+                <h2 class="h5 mb-3">
+                    Выполнено
+                    <span class="badge text-bg-success"
+                          th:text="${doneCount}">
+                        0
+                    </span>
+                </h2>
+
+                <a class="task-card d-block p-3 mb-3 text-decoration-none"
+                   th:each="task : ${tasks}"
+                   th:if="${task.status.name() == 'DONE'}"
+                   th:href="@{/tasks/{id}/edit(id=${task.id})}">
+
+                    <h3 class="h6 fw-bold"
+                        th:text="${task.title}">
+                        Название задачи
+                    </h3>
+
+                    <p class="task-description small mb-3"
+                       th:text="${task.description}">
+                        Описание задачи
+                    </p>
+
+                    <span class="badge text-bg-danger"
+                          th:text="${task.priority}">
+                        HIGH
+                    </span>
+
+                </a>
+
+            </section>
+        </div>
+
+    </div>
+
+</main>
+
+</body>
+</html>
+
